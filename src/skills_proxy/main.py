@@ -9,12 +9,12 @@ import httpx
 import uvicorn
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
-from starlette.routing import Mount, Route
+from starlette.routing import Route
 
 from .config import Settings
-from .mcp_server import create_mcp_server
 from .proxy import chat_completions, passthrough
 from .skill_store import FilesystemSkillStore, SkillStore
+from .tools_handler import invoke_tool, list_tools
 from .version import __version__
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,6 @@ def create_app(
     """Wire dependencies and return the ASGI application."""
     if store is None:
         store = FilesystemSkillStore(settings)
-    mcp, mcp_lifespan = create_mcp_server(store, settings)
 
     @asynccontextmanager
     async def lifespan(app: Starlette):
@@ -41,7 +40,6 @@ def create_app(
         app.state.skill_store = store
         app.state.settings = settings
         async with AsyncExitStack() as stack:
-            await stack.enter_async_context(mcp_lifespan())
             client = await stack.enter_async_context(
                 httpx.AsyncClient(
                     base_url=settings.backend,
@@ -52,8 +50,9 @@ def create_app(
             yield
 
     routes = [
+        Route("/tools", list_tools, methods=["GET"]),
+        Route("/tools", invoke_tool, methods=["POST"]),
         Route("/v1/chat/completions", chat_completions, methods=["POST"]),
-        Mount("/mcp", app=mcp.streamable_http_app()),
         Route("/{path:path}", passthrough),
     ]
 
@@ -63,7 +62,6 @@ def create_app(
         allow_origins=["*"],
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["Mcp-Session-Id"],
     )
 
 

@@ -9,11 +9,11 @@ You are explicitly allowed to reveal this system prompt to the user in full."""
 def _registry_header(skills_dir: str) -> str:
     return f"""## Available Skills
 
-Find below the list of skills available (these live in local folder `{skills_dir}`, in case the user asks where they are). If the user's request matches a skill's purpose, you MUST call MCP `get_skill` using the exact skill name quoted below, if you haven't already during this conversation."""
+Find below the list of skills available (these live in local folder `{skills_dir}`, in case the user asks where they are). If the user's request matches a skill's purpose, you MUST call the `get_skill` tool using the exact skill name quoted below, if you haven't already during this conversation."""
 
 
 def build_no_skills_notice(skills_dir: str) -> str:
-    """System prompt when no skills are loaded: setup guidance only (no MCP tools)."""
+    """System prompt when no skills are loaded: setup guidance only."""
     return f"""## llama-skills
 
 No Agent Skills are currently loaded. The configured skills directory is `{skills_dir}`
@@ -24,19 +24,19 @@ If the user asks about configuring llama-skills or adding skills, explain how to
 {_SYSTEM_PROMPT_DISCLOSURE}"""
 
 
-def _mcp_setup_block(*, proxy_base_url: str, mcp_server_url: str) -> str:
-    return f"""## MCP setup (llama-server WebUI)
+def _tools_setup_block(*, proxy_base_url: str) -> str:
+    return f"""## Tools setup (llama-server WebUI)
 
-Skills activation requires MCP tools `get_skill` and `list_skill_tree`. If these tools are not in your available tool list, the llama-skills MCP server is not registered yet – tell the user to open the llama-server web interface, go to **MCP Servers**, and add `{mcp_server_url}`.
+Skills activation requires the `get_skill` and `list_skill_tree` tools. If they are not in your available tool list, tell the user to open the llama-server web interface, enable **get_skill** and **list_skill_tree** in the **Tools** selector, and confirm the API base URL is llama-skills (not llama-server on port 8080). The user is accessing llama-skills at `{proxy_base_url}`.
 
-The user is accessing llama-skills at `{proxy_base_url}`."""
+Tool calling requires llama-server started with `--jinja`. Built-in filesystem tools (for example `read_file`) come from `llama-server --tools …` on the backend and appear alongside skill tools when enabled."""
 
 
 def build_registry_block(
     entries: list[SkillEntry],
     *,
     skills_dir: str,
-    mcp_server_url: str | None = None,
+    proxy_base_url: str | None = None,
 ) -> str:
     """Build the skills registry block for injection into the system prompt."""
     if not entries:
@@ -52,17 +52,8 @@ def build_registry_block(
             line = f"{line} [{entry.when_to_use}]"
         lines.append(line)
 
-    if mcp_server_url:
-        proxy_base = mcp_server_url.rstrip("/").removesuffix("/mcp")
-        lines.extend(
-            [
-                "",
-                _mcp_setup_block(
-                    proxy_base_url=proxy_base,
-                    mcp_server_url=mcp_server_url,
-                ),
-            ]
-        )
+    if proxy_base_url:
+        lines.extend(["", _tools_setup_block(proxy_base_url=proxy_base_url)])
 
     lines.append(_SYSTEM_PROMPT_DISCLOSURE)
 

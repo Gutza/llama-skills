@@ -1,1 +1,1 @@
-"""Skills proxy: registry injection and MCP activation for llama-server."""
+"""Skills proxy: registry injection and /tools activation for llama-server."""

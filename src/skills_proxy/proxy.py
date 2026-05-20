@@ -49,12 +49,11 @@ async def chat_completions(request: Request) -> Response:
     settings = request.app.state.settings
     store = request.app.state.skill_store
     entries = store.list_registry_entries()
-    base_url = resolve_public_base_url(request, settings)
-    mcp_url = f"{base_url}/mcp/" if base_url else None
+    proxy_base_url = resolve_public_base_url(request, settings)
     registry = build_registry_block(
         entries,
         skills_dir=settings.skills_dir,
-        mcp_server_url=mcp_url,
+        proxy_base_url=proxy_base_url,
     )
     payload["messages"] = inject_registry(messages, registry)
     modified_body = json.dumps(payload).encode("utf-8")
@@ -122,7 +121,7 @@ def _client_proto(request: Request, backend_url: str) -> str:
 
 
 def resolve_public_base_url(request: Request, settings: Settings) -> str | None:
-    """Derive the client-facing llama-skills base URL for MCP setup instructions."""
+    """Derive the client-facing llama-skills base URL for Tools setup instructions."""
     if settings.public_url:
         return settings.public_url
 
@@ -135,7 +134,7 @@ def resolve_public_base_url(request: Request, settings: Settings) -> str | None:
 
 
 def _ensure_absolute_url(target: str, request: Request, backend_url: str) -> str:
-    """Add http(s) scheme when the WebUI passes a host-only or path-only MCP URL."""
+    """Add http(s) scheme when the WebUI passes a host-only or path-only URL."""
     if not target.strip():
         return target
 

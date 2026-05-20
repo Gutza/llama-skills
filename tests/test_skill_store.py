@@ -20,7 +20,7 @@ def test_list_registry_entries_when_to_use(store):
     assert demo.when_to_use == "Use for demos"
 
 
-def test_registry_uses_folder_name_for_mcp(store):
+def test_registry_uses_folder_name_for_get_skill(store):
     mismatch = store._skills_dir / "folder-id"
     mismatch.mkdir()
     (mismatch / "SKILL.md").write_text(

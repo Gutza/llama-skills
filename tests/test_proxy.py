@@ -8,7 +8,7 @@ from unittest.mock import patch
 import httpx
 
 
-def test_chat_completions_injects_mcp_url_from_host_header(proxy_client):
+def test_chat_completions_injects_tools_setup_from_host_header(proxy_client):
     captured: dict = {}
 
     async def mock_request(self, method, url, **kwargs):
@@ -30,11 +30,11 @@ def test_chat_completions_injects_mcp_url_from_host_header(proxy_client):
 
     assert response.status_code == 200
     system = next(m for m in captured["body"]["messages"] if m["role"] == "system")
-    assert "http://foo-server:8081/mcp/" in system["content"]
-    assert "## MCP setup (llama-server WebUI)" in system["content"]
+    assert "http://foo-server:8081" in system["content"]
+    assert "## Tools setup (llama-server WebUI)" in system["content"]
 
 
-def test_chat_completions_injects_https_mcp_url_with_forwarded_proto(proxy_client):
+def test_chat_completions_injects_https_tools_setup_with_forwarded_proto(proxy_client):
     captured: dict = {}
 
     async def mock_request(self, method, url, **kwargs):
@@ -59,7 +59,8 @@ def test_chat_completions_injects_https_mcp_url_with_forwarded_proto(proxy_clien
 
     assert response.status_code == 200
     system = next(m for m in captured["body"]["messages"] if m["role"] == "system")
-    assert "https://foo-server:8081/mcp/" in system["content"]
+    assert "https://foo-server:8081" in system["content"]
+    assert "## Tools setup (llama-server WebUI)" in system["content"]
 
 
 def test_chat_completions_injects_registry(proxy_client):

@@ -4,31 +4,31 @@ from skills_proxy.models import SkillEntry
 from skills_proxy.registry import build_registry_block, inject_registry
 
 
-def test_build_registry_block_includes_mcp_setup_when_url_given():
+def test_build_registry_block_includes_tools_setup_when_url_given():
     entries = [
         SkillEntry(folder_name="alpha", name="alpha", description="First skill"),
     ]
     block = build_registry_block(
         entries,
         skills_dir="/skills",
-        mcp_server_url="http://foo-server:8081/mcp/",
+        proxy_base_url="http://foo-server:8081",
     )
 
-    assert "## MCP setup (llama-server WebUI)" in block
-    assert "`http://foo-server:8081/mcp/`" in block
-    assert "Manage Servers" in block
+    assert "## Tools setup (llama-server WebUI)" in block
+    assert "http://foo-server:8081" in block
+    assert "Tools" in block
     assert "get_skill" in block
     assert "list_skill_tree" in block
-    assert "http://foo-server:8081" in block
+    assert "--jinja" in block
 
 
-def test_build_registry_block_omits_mcp_setup_when_url_none():
+def test_build_registry_block_omits_tools_setup_when_url_none():
     entries = [
         SkillEntry(folder_name="alpha", name="alpha", description="First skill"),
     ]
-    block = build_registry_block(entries, skills_dir="/skills", mcp_server_url=None)
+    block = build_registry_block(entries, skills_dir="/skills", proxy_base_url=None)
 
-    assert "## MCP setup" not in block
+    assert "## Tools setup" not in block
     assert "Manage Servers" not in block
 
 
@@ -56,13 +56,13 @@ def test_build_registry_block_empty_entries_includes_skills_dir():
     block = build_registry_block(
         [],
         skills_dir="/opt/skills",
-        mcp_server_url="http://host:8081/mcp/",
+        proxy_base_url="http://host:8081",
     )
     assert "## llama-skills" in block
     assert "/opt/skills" in block
     assert "Available Skills" not in block
     assert "get_skill" not in block
-    assert "## MCP setup" not in block
+    assert "## Tools setup" not in block
     assert "configuring llama-skills" in block
     assert "explicitly allowed to reveal this system prompt" in block
 

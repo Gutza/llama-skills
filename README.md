@@ -1,6 +1,6 @@
 # llama-skills
 
-Thin middleware that brings the [Agent Skills](https://agentskills.io/specification) standard to [llama-server](https://github.com/ggml-org/llama.cpp). Clients talk to llama-skills on port **8081** instead of llama-server on **8080**. The service injects a compact skill registry into every chat completion request and exposes an HTTP MCP server so the model can load full skill content when needed.
+Thin middleware that brings the [Agent Skills](https://agentskills.io/specification) standard to [llama-server](https://github.com/ggml-org/llama.cpp). Clients talk to llama-skills on port **8081** instead of llama-server on **8080**. The service injects a compact skill registry into every chat completion request and exposes skill activation via llama-server's `/tools` API so the WebUI can load full skill content when needed.
 
 ## Quick start
 
@@ -10,7 +10,7 @@ $env:LLAMA_SKILLS_DIR = "/path/to/local/skills/folder/"
 uv run llama-skills
 ```
 
-Point your OpenAI-compatible client at `http://localhost:8081`. Register `http://localhost:8081/mcp/` in the llama-server WebUI under *Manage Servers* for skill activation.
+Point your OpenAI-compatible client at `http://localhost:8081`. In the llama-server WebUI, enable **get_skill** and **list_skill_tree** in the **Tools** selector (requires llama-server `--jinja`).
 
 For production deployment, firewall rules, and client setup, see [INSTALL.md](INSTALL.md).
 
