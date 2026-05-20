@@ -7,8 +7,8 @@ from dataclasses import dataclass
 class SkillEntry:
     """A skill listed in the injected registry block."""
 
-    name: str  # Folder name under LLAMA_SKILLS_DIR; MCP `name` argument
-    title: str | None = None # YAML `name` field in SKILL.md
+    folder_name: str  # Folder name under LLAMA_SKILLS_DIR; MCP `name` argument
+    name: str # YAML `name` field in SKILL.md
     description: str # YAML `description` field in SKILL.md
     when_to_use: str | None = None # YAML `when_to_use` field in SKILL.md
 

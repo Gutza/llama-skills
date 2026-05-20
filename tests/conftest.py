@@ -87,8 +87,9 @@ class FakeSkillStore:
 def fake_store():
     return FakeSkillStore(
         entries=[
-            SkillEntry(name="alpha", description="First skill"),
+            SkillEntry(folder_name="alpha", name="alpha", description="First skill"),
             SkillEntry(
+                folder_name="beta",
                 name="beta",
                 description="Second skill",
                 when_to_use="For beta tasks",

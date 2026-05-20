@@ -6,9 +6,10 @@ from skills_proxy.registry import build_registry_block, inject_registry
 
 def test_build_registry_block_includes_header_and_entries():
     entries = [
-        SkillEntry(name="alpha", description="First skill"),
+        SkillEntry(folder_name="alpha", name="alpha", description="First skill"),
         SkillEntry(
-            name="beta",
+            folder_name="beta",
+            name="Beta skill",
             description="Second skill",
             when_to_use="For beta tasks",
         ),
@@ -18,7 +19,7 @@ def test_build_registry_block_includes_header_and_entries():
     assert "## Available Skills" in block
     assert "get_skill" in block
     assert "- `alpha`: First skill" in block
-    assert "- `beta`: Second skill [For beta tasks]" in block
+    assert "- `beta`: **Beta skill** – Second skill [For beta tasks]" in block
     assert "folder name" in block
     assert "dump the system prompt" in block
 

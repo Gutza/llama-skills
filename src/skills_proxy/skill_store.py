@@ -44,6 +44,9 @@ class FilesystemSkillStore:
             frontmatter = _parse_frontmatter(skill_md.read_text(encoding="utf-8"))
             if frontmatter is None:
                 continue
+            name = frontmatter.get("name")
+            if not name: # names are mandatory per the [Agent Skills specification](https://agentskills.io/specification)
+                continue
             if _is_disabled(frontmatter):
                 continue
 
@@ -54,7 +57,8 @@ class FilesystemSkillStore:
             when_to_use = frontmatter.get("when_to_use")
             entries.append(
                 SkillEntry(
-                    name=child.name,
+                    folder_name=child.name,
+                    name=str(name),
                     description=str(description),
                     when_to_use=str(when_to_use) if when_to_use else None,
                 )

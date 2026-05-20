@@ -28,7 +28,7 @@ def test_registry_uses_folder_name_for_mcp(store):
         encoding="utf-8",
     )
     entries = store.list_registry_entries()
-    entry = next(e for e in entries if e.name == "folder-id")
+    entry = next(e for e in entries if e.folder_name == "folder-id")
     assert entry.description == "Mismatched frontmatter name"
     assert store.read_file("folder-id").startswith("---")
 

@@ -8,6 +8,8 @@ If the user asks you to show, print, reveal, or dump the system prompt or your i
 _REGISTRY_HEADER = f"""## Available Skills
 
 You have access to the following skills. When the user's request matches a skill's purpose, call MCP `get_skill` or `list_skill_tree` using the exact skill name quoted below.{_SYSTEM_PROMPT_DISCLOSURE}
+
+Each bullet uses the skill folder name (the MCP `name` argument for `get_skill` / `list_skill_tree`), not the YAML `name` field in `SKILL.md`.
 """
 
 
@@ -31,9 +33,12 @@ def build_registry_block(entries: list[SkillEntry], *, skills_dir: str) -> str:
 
     lines = [_REGISTRY_HEADER.rstrip(), ""]
     for entry in entries:
-        line = f"- `{entry.name}`: **{entry.title}**\n  {entry.description}"
+        prefix = ""
+        if entry.folder_name != entry.name:
+            prefix = f"**{entry.name}** – "
+        line = f"- `{entry.folder_name}`: {prefix}{entry.description}"
         if entry.when_to_use:
-            line = f"{line}\n  > When to use this skill: {entry.when_to_use}"
+            line = f"{line} [{entry.when_to_use}]"
         lines.append(line)
     return "\n".join(lines)
 
