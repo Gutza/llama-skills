@@ -45,14 +45,14 @@ async def chat_completions(request: Request) -> Response:
     if not isinstance(messages, list):
         messages = []
 
+    settings = request.app.state.settings
     store = request.app.state.skill_store
     entries = store.list_registry_entries()
-    registry = build_registry_block(entries)
+    registry = build_registry_block(entries, skills_dir=settings.skills_dir)
     payload["messages"] = inject_registry(messages, registry)
     modified_body = json.dumps(payload).encode("utf-8")
 
     client: httpx.AsyncClient = request.app.state.http_client
-    settings = request.app.state.settings
     return await _forward_request(
         client,
         settings.backend,

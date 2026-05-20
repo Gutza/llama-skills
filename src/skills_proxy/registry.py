@@ -8,10 +8,23 @@ You have access to the following skills. When the user's request matches a skill
 """
 
 
-def build_registry_block(entries: list[SkillEntry]) -> str:
+def build_no_skills_notice(skills_dir: str) -> str:
+    """System prompt when no skills are loaded: setup guidance only (no MCP tools)."""
+    return f"""## llama-skills
+
+No Agent Skills are currently loaded. The configured skills directory is:
+
+`{skills_dir}`
+
+That directory is empty or has no valid skill folders (each needs a `SKILL.md` with `name` and `description` in YAML frontmatter). See the [Agent Skills specification](https://agentskills.io/specification) for the format.
+
+If the user asks about configuring llama-skills or adding skills, explain how to add skill folders under this path. llama-skills rescans that directory on every chat completion (no service restart); however, only new completion requests (i.e. new conversations) see the updated list; earlier turns in the same conversation are not rewritten."""
+
+
+def build_registry_block(entries: list[SkillEntry], *, skills_dir: str) -> str:
     """Build the skills registry block for injection into the system prompt."""
     if not entries:
-        return ""
+        return build_no_skills_notice(skills_dir)
 
     lines = [_REGISTRY_HEADER.rstrip(), ""]
     for entry in entries:

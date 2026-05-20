@@ -13,7 +13,7 @@ def test_build_registry_block_includes_header_and_entries():
             when_to_use="For beta tasks",
         ),
     ]
-    block = build_registry_block(entries)
+    block = build_registry_block(entries, skills_dir="/skills")
 
     assert "## Available Skills" in block
     assert "get_skill" in block
@@ -21,15 +21,23 @@ def test_build_registry_block_includes_header_and_entries():
     assert "- **beta**: Second skill [For beta tasks]" in block
 
 
-def test_build_registry_block_empty_entries():
-    assert build_registry_block([]) == ""
+def test_build_registry_block_empty_entries_includes_skills_dir():
+    block = build_registry_block([], skills_dir="/opt/skills")
+    assert "## llama-skills" in block
+    assert "/opt/skills" in block
+    assert "Available Skills" not in block
+    assert "get_skill" not in block
+    assert "configuring llama-skills" in block
+    assert "earlier turns" in block
 
 
-def test_inject_registry_skips_when_no_skills():
+def test_inject_registry_includes_setup_notice_when_no_skills():
     messages = [{"role": "system", "content": "You are helpful."}]
-    result = inject_registry(messages, build_registry_block([]))
-    assert result == messages
-    assert result is not messages
+    result = inject_registry(
+        messages, build_registry_block([], skills_dir="/data/skills")
+    )
+    assert "/data/skills" in result[0]["content"]
+    assert "You are helpful." in result[0]["content"]
 
 
 def test_inject_registry_prepends_existing_system_message():

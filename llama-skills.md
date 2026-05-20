@@ -104,7 +104,7 @@ All other frontmatter fields are passed through to `get_skill` as raw file conte
 On every `POST /v1/chat/completions` request:
 
 1. Scan `LLAMA_SKILLS_DIR`, parse frontmatter from each `*/SKILL.md`. Skills missing a `name` or `description`, or with `disable-model-invocation: true`, are silently skipped.
-2. If no skills remain after filtering, leave the request unchanged (no registry text, no new system message).
+2. If no skills remain after filtering, inject a short setup notice (see §4.4.2) that includes the configured `LLAMA_SKILLS_DIR` path. It does not mention MCP tools.
 3. Otherwise build a skills registry block (see §4.4.1) and prepend it to the existing system message, or insert one if the request has no system message.
 4. Forward the (possibly modified) request to llama-server. Stream the response back to the client unchanged.
 
@@ -122,6 +122,10 @@ You have access to the following skills. When the user's request matches a skill
 ```
 
 The registry block is placed at the top of the system message, separated from the original content by a blank line.
+
+#### 4.4.2 No skills loaded
+
+When the skills directory is empty or has no valid entries, inject a brief **llama-skills** section instead of §4.4.1. It states that no skills are loaded, quotes the live `LLAMA_SKILLS_DIR` path, points to the Agent Skills specification, and instructs the model to help the user add skill folders if they ask about configuring llama-skills. It must not claim skills are available or reference `get_skill`.
 
 ### 4.5 MCP server: tools
 
@@ -196,7 +200,9 @@ Step-by-step client setup and verification: [INSTALL.md](INSTALL.md).
 
 ### 4.9 Skills directory hot reload
 
-The skills directory is scanned on every request. No restart is required to add, edit, or remove skills. There is no caching of parsed frontmatter between requests.
+The skills directory is scanned on every `POST /v1/chat/completions` request. No restart is required to add, edit, or remove skills. There is no caching of parsed frontmatter between requests.
+
+Injection applies only to the messages in the current completion request. Prior user or assistant turns in an existing conversation are unchanged; the model does not retroactively gain or lose skills for history already in context. In practice, users see updates when they send a new message (or start a new chat), not as a silent rewrite of earlier turns.
 
 ### 4.10 Architecture notes
 
