@@ -6,7 +6,7 @@ Thin middleware that brings the [Agent Skills](https://agentskills.io/specificat
 
 ```powershell
 uv sync
-$env:LLAMA_SKILLS_DIR = "C:\path\to\skills"
+$env:LLAMA_SKILLS_DIR = "/path/to/local/skills/folder/"
 uv run llama-skills
 ```
 

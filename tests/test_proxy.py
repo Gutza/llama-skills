@@ -58,8 +58,27 @@ def test_passthrough_forwards_unchanged(proxy_client):
 
     assert response.status_code == 200
     assert captured["method"] == "GET"
-    assert captured["url"] == "http://llama-backend.test/v1/models"
+    assert captured["url"] == "/v1/models"
     assert captured["body"] in (None, b"")
+
+
+def test_passthrough_returns_502_when_backend_unreachable(skills_dir):
+    from starlette.testclient import TestClient
+
+    from skills_proxy.config import Settings
+    from skills_proxy.main import create_app
+
+    settings = Settings(
+        skills_dir=str(skills_dir),
+        backend="http://127.0.0.1:1",
+        host="127.0.0.1",
+        port=18081,
+    )
+    with TestClient(create_app(settings)) as client:
+        response = client.get("/")
+
+    assert response.status_code == 502
+    assert "llama-server unreachable" in response.text
 
 
 def test_chat_completions_streaming(proxy_client):

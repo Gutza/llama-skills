@@ -24,7 +24,7 @@ This guide covers local development setup, production deployment on your inferen
 3. Set required environment variables:
 
    ```powershell
-   $env:LLAMA_SKILLS_DIR = "/path/to/local/skills"
+   $env:LLAMA_SKILLS_DIR = "/path/to/local/skills/folder/"
    $env:LLAMA_SKILLS_BACKEND = "http://localhost:8080"   # optional
    $env:LLAMA_SKILLS_PORT = "8081"                       # optional
    ```
@@ -79,9 +79,11 @@ After llama-skills is running:
 
 ## Verification
 
+llama-skills forwards almost all HTTP traffic to llama-server. If llama-server is not running or `LLAMA_SKILLS_BACKEND` is wrong, passthrough routes (including `GET /`) return **502** with `llama-server unreachable`, not a browser-friendly page from llama-skills itself.
+
 Run these checks after deployment:
 
-1. **Passthrough:** `GET http://<host>:8081/v1/models` should return the same response as llama-server on port 8080.
+1. **Passthrough:** `GET http://<host>:8081/v1/models` should return the same response as llama-server on port 8080. Confirm llama-server is up first (`curl http://127.0.0.1:8080/v1/models` on the host).
 
 2. **Registry injection:** send a `POST /v1/chat/completions` request and confirm the forwarded body includes a system message with `## Available Skills` at the top (inspect llama-server logs or a temporary backend proxy).
 

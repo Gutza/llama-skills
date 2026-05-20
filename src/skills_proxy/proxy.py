@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+import logging
 
 import httpx
 from starlette.requests import Request
 from starlette.responses import Response, StreamingResponse
 
 from .registry import build_registry_block, inject_registry
+
+logger = logging.getLogger(__name__)
 
 _HOP_BY_HOP = {
     "connection",
@@ -73,6 +76,22 @@ async def passthrough(request: Request) -> Response:
     )
 
 
+def _backend_path(request: Request) -> str:
+    path = request.url.path
+    if request.url.query:
+        return f"{path}?{request.url.query}"
+    return path
+
+
+def _backend_unreachable_response(backend_url: str, exc: Exception) -> Response:
+    logger.warning("llama-server unreachable at %s: %s", backend_url, exc)
+    return Response(
+        f"llama-server unreachable ({backend_url})",
+        status_code=502,
+        media_type="text/plain",
+    )
+
+
 async def _forward_request(
     client: httpx.AsyncClient,
     backend_url: str,
@@ -81,10 +100,7 @@ async def _forward_request(
     body: bytes,
     stream: bool,
 ) -> Response:
-    url = f"{backend_url.rstrip('/')}{request.url.path}"
-    if request.url.query:
-        url = f"{url}?{request.url.query}"
-
+    path = _backend_path(request)
     headers = {
         key: value
         for key, value in request.headers.items()
@@ -92,14 +108,20 @@ async def _forward_request(
     }
 
     if stream:
-        return await _forward_streaming(client, request.method, url, headers, body)
+        return await _forward_streaming(
+            client, backend_url, request.method, path, headers, body
+        )
 
-    response = await client.request(
-        request.method,
-        url,
-        headers=headers,
-        content=body,
-    )
+    try:
+        response = await client.request(
+            request.method,
+            path,
+            headers=headers,
+            content=body,
+        )
+    except httpx.RequestError as exc:
+        return _backend_unreachable_response(backend_url, exc)
+
     return Response(
         content=response.content,
         status_code=response.status_code,
@@ -109,13 +131,17 @@ async def _forward_request(
 
 async def _forward_streaming(
     client: httpx.AsyncClient,
+    backend_url: str,
     method: str,
-    url: str,
+    path: str,
     headers: dict[str, str],
     body: bytes,
-) -> StreamingResponse:
-    request = client.build_request(method, url, headers=headers, content=body)
-    send = await client.send(request, stream=True)
+) -> Response:
+    httpx_request = client.build_request(method, path, headers=headers, content=body)
+    try:
+        send = await client.send(httpx_request, stream=True)
+    except httpx.RequestError as exc:
+        return _backend_unreachable_response(backend_url, exc)
 
     async def stream_body():
         try:
