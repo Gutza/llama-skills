@@ -44,6 +44,7 @@ def test_passthrough_forwards_unchanged(proxy_client):
     async def mock_request(self, method, url, **kwargs):
         captured["method"] = method
         captured["url"] = url
+        captured["headers"] = kwargs.get("headers") or {}
         captured["body"] = kwargs.get("content")
 
         class MockResponse:
@@ -60,6 +61,8 @@ def test_passthrough_forwards_unchanged(proxy_client):
     assert captured["method"] == "GET"
     assert captured["url"] == "/v1/models"
     assert captured["body"] in (None, b"")
+    assert "host" not in {k.lower() for k in captured["headers"]}
+    assert captured["headers"].get("x-forwarded-proto") == "http"
 
 
 def test_passthrough_returns_502_when_backend_unreachable(skills_dir):

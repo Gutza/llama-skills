@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+from urllib.parse import urlparse
 
 import httpx
 from starlette.requests import Request
@@ -22,6 +23,13 @@ _HOP_BY_HOP = {
     "trailers",
     "transfer-encoding",
     "upgrade",
+}
+
+# Let httpx set Host/Content-Length from base_url and body. Forwarding the
+# client's Host (e.g. lloom:8081) makes llama-server build scheme-less URLs.
+_SKIP_REQUEST_HEADERS = _HOP_BY_HOP | {
+    "host",
+    "content-length",
 }
 
 
@@ -76,6 +84,19 @@ async def passthrough(request: Request) -> Response:
     )
 
 
+def _forward_headers(request: Request, backend_url: str) -> dict[str, str]:
+    parsed = urlparse(backend_url)
+    headers = {
+        key: value
+        for key, value in request.headers.items()
+        if key.lower() not in _SKIP_REQUEST_HEADERS
+    }
+    if request.headers.get("host"):
+        headers["x-forwarded-host"] = request.headers["host"]
+    headers["x-forwarded-proto"] = parsed.scheme
+    return headers
+
+
 def _backend_path(request: Request) -> str:
     path = request.url.path
     if request.url.query:
@@ -101,11 +122,7 @@ async def _forward_request(
     stream: bool,
 ) -> Response:
     path = _backend_path(request)
-    headers = {
-        key: value
-        for key, value in request.headers.items()
-        if key.lower() not in _HOP_BY_HOP
-    }
+    headers = _forward_headers(request, backend_url)
 
     if stream:
         return await _forward_streaming(
