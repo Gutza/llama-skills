@@ -9,6 +9,7 @@ This is the source folder for **llama-skills**, a Python project that enables st
 * Use short descriptive commit messages
 * Only provide simple context, and don't be overly verbose
 * Always run linting before committing to ensure code passes all checks
+* Bump the version in `/pyproject.toml` when making changes
 
 ## Pull Requests
 

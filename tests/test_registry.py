@@ -22,9 +22,14 @@ def test_build_registry_block_includes_header_and_entries():
 
 
 def test_build_registry_block_empty_entries():
-    block = build_registry_block([])
-    assert block.startswith("## Available Skills")
-    assert "- **" not in block
+    assert build_registry_block([]) == ""
+
+
+def test_inject_registry_skips_when_no_skills():
+    messages = [{"role": "system", "content": "You are helpful."}]
+    result = inject_registry(messages, build_registry_block([]))
+    assert result == messages
+    assert result is not messages
 
 
 def test_inject_registry_prepends_existing_system_message():

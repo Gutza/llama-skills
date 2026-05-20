@@ -11,7 +11,7 @@ You have access to the following skills. When the user's request matches a skill
 def build_registry_block(entries: list[SkillEntry]) -> str:
     """Build the skills registry block for injection into the system prompt."""
     if not entries:
-        return _REGISTRY_HEADER.rstrip()
+        return ""
 
     lines = [_REGISTRY_HEADER.rstrip(), ""]
     for entry in entries:

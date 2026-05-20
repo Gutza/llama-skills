@@ -104,9 +104,9 @@ All other frontmatter fields are passed through to `get_skill` as raw file conte
 On every `POST /v1/chat/completions` request:
 
 1. Scan `LLAMA_SKILLS_DIR`, parse frontmatter from each `*/SKILL.md`. Skills missing a `name` or `description`, or with `disable-model-invocation: true`, are silently skipped.
-2. Build a skills registry block (see §4.4.1).
-3. Prepend the registry block to the existing system message. If the request contains no system message, insert one.
-4. Forward the modified request to llama-server. Stream the response back to the client unchanged.
+2. If no skills remain after filtering, leave the request unchanged (no registry text, no new system message).
+3. Otherwise build a skills registry block (see §4.4.1) and prepend it to the existing system message, or insert one if the request has no system message.
+4. Forward the (possibly modified) request to llama-server. Stream the response back to the client unchanged.
 
 All other request fields (`model`, `temperature`, `tools`, `stream`, etc.) are forwarded unmodified.
 
