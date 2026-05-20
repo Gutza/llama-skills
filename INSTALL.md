@@ -2,6 +2,12 @@
 
 This guide covers local development setup, production deployment on your inference host, client configuration, and smoke-test verification. For a high-level overview, see [README.md](README.md). For design rationale and behaviour details, see [llama-skills.md](llama-skills.md).
 
+## Updating
+A quick note on updating an existing installation:
+```bash
+git pull && uv sync && sudo systemctl restart llama-skills && systemctl status llama-skills
+```
+
 ## Prerequisites
 
 - Python 3.11 or newer
