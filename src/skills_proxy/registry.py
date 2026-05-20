@@ -27,9 +27,11 @@ If the user asks about configuring llama-skills or adding skills, explain how to
 def _tools_setup_block(*, proxy_base_url: str) -> str:
     return f"""## Tools setup (llama-server WebUI)
 
-Skills activation requires the `get_skill` and `list_skill_tree` tools. If they are not in your available tool list, tell the user to open the llama-server web interface, enable **get_skill** and **list_skill_tree** in the **Tools** selector, and confirm the API base URL is llama-skills (not llama-server on port 8080). The user is accessing llama-skills at `{proxy_base_url}`.
+Skills activation requires the `get_skill` and `list_skill_tree` tools. If they are not in your available tool list, tell the user to open the llama-server web interface, enable **get_skill** and **list_skill_tree** in the **Tools** selector.
 
-Tool calling requires llama-server started with `--jinja`. Built-in filesystem tools (for example `read_file`) come from `llama-server --tools …` on the backend and appear alongside skill tools when enabled."""
+Tool calling requires llama-server started with `--jinja`. Built-in filesystem tools (for example `read_file`) come from `llama-server --tools …` on the backend and appear alongside skill tools when enabled.
+
+The user is accessing llama-skills at `{proxy_base_url}`."""
 
 
 def build_registry_block(
