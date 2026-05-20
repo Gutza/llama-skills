@@ -81,6 +81,8 @@ After llama-skills is running:
 
 llama-skills forwards almost all HTTP traffic to llama-server. The proxy does **not** forward the client `Host` header (that breaks llama-server URL construction with `invalid URL: no scheme`); it sets `X-Forwarded-Proto` and `X-Forwarded-Host` instead.
 
+For the llama-server WebUI **CORS proxy** (`/cors-proxy`), llama-skills answers `HEAD /cors-proxy` locally (availability probe) and adds `http://` to scheme-less `url=` query parameters before forwarding.
+
 If llama-server is not running or `LLAMA_SKILLS_BACKEND` is wrong, passthrough routes (including `GET /`) return **502** with `llama-server unreachable`, not a browser-friendly page from llama-skills itself.
 
 Run these checks after deployment:

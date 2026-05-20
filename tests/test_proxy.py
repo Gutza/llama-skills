@@ -65,6 +65,35 @@ def test_passthrough_forwards_unchanged(proxy_client):
     assert captured["headers"].get("x-forwarded-proto") == "http"
 
 
+def test_cors_proxy_head_probe_returns_200_without_forwarding(proxy_client):
+    with patch.object(httpx.AsyncClient, "request") as mock_request:
+        response = proxy_client.head("/cors-proxy")
+    mock_request.assert_not_called()
+    assert response.status_code == 200
+
+
+def test_cors_proxy_adds_scheme_to_url_query(proxy_client):
+    captured: dict = {}
+
+    async def mock_request(self, method, url, **kwargs):
+        captured["url"] = url
+
+        class MockResponse:
+            status_code = 200
+            content = b""
+            headers = {}
+
+        return MockResponse()
+
+    with patch.object(httpx.AsyncClient, "request", mock_request):
+        proxy_client.get(
+            "/cors-proxy",
+            params={"url": "lloom.pn:8081/mcp/"},
+        )
+
+    assert captured["url"] == "/cors-proxy?url=http%3A%2F%2Flloom.pn%3A8081%2Fmcp%2F"
+
+
 def test_passthrough_returns_502_when_backend_unreachable(skills_dir):
     from starlette.testclient import TestClient
 

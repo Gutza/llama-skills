@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from contextlib import AsyncExitStack, asynccontextmanager
 
 import httpx
@@ -14,6 +15,9 @@ from .config import Settings
 from .mcp_server import create_mcp_server
 from .proxy import chat_completions, passthrough
 from .skill_store import FilesystemSkillStore, SkillStore
+from .version import __version__
+
+logger = logging.getLogger(__name__)
 
 
 def create_app(
@@ -28,6 +32,12 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(app: Starlette):
+        logger.info(
+            "llama-skills %s starting (backend %s, skills_dir %s)",
+            __version__,
+            settings.backend,
+            settings.skills_dir,
+        )
         app.state.skill_store = store
         app.state.settings = settings
         async with AsyncExitStack() as stack:
