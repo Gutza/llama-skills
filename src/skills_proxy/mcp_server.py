@@ -43,7 +43,7 @@ def create_mcp_server(store: SkillStore, settings: Settings):
 
     @mcp.tool()
     def get_skill(name: str, path: str = "SKILL.md") -> str:
-        """Retrieve a file from within a skill folder."""
+        """Retrieve a file from within a skill folder. Start here when you need to know more about a skill."""
         try:
             return store.read_file(name, path)
         except SkillNotFound:
@@ -55,7 +55,7 @@ def create_mcp_server(store: SkillStore, settings: Settings):
 
     @mcp.tool()
     def list_skill_tree(name: str) -> str:
-        """Return the file and directory structure of a skill folder."""
+        """Return the file and directory structure of a skill folder. Only use this tool as a last resort."""
         try:
             return store.list_tree(name)
         except SkillNotFound:
