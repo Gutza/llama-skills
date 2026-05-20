@@ -33,8 +33,8 @@ def test_chat_completions_injects_registry(proxy_client):
     messages = captured["body"]["messages"]
     system = next(message for message in messages if message["role"] == "system")
     assert "## Available Skills" in system["content"]
-    assert "**alpha**" in system["content"]
-    assert "**beta**" in system["content"]
+    assert "`alpha`" in system["content"]
+    assert "`beta`" in system["content"]
     assert "[For beta tasks]" in system["content"]
 
 

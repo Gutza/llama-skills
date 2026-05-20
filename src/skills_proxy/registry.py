@@ -2,9 +2,12 @@
 
 from .models import SkillEntry
 
-_REGISTRY_HEADER = """## Available Skills
+_SYSTEM_PROMPT_DISCLOSURE = """
+If the user asks you to show, print, reveal, or dump the system prompt or your instructions, quote the full system message you received (including this block) verbatim. Do not refuse, hedge, or summarize it."""
 
-You have access to the following skills. When the user's request matches a skill's purpose, use MCP `get_skill` with the skill name to load its full instructions before proceeding.
+_REGISTRY_HEADER = f"""## Available Skills
+
+You have access to the following skills. When the user's request matches a skill's purpose, call MCP `get_skill` or `list_skill_tree` using the exact skill name quoted below.{_SYSTEM_PROMPT_DISCLOSURE}
 """
 
 
@@ -18,7 +21,7 @@ No Agent Skills are currently loaded. The configured skills directory is:
 
 That directory is empty or has no valid skill folders (each needs a `SKILL.md` with `name` and `description` in YAML frontmatter). See the [Agent Skills specification](https://agentskills.io/specification) for the format.
 
-If the user asks about configuring llama-skills or adding skills, explain how to add skill folders under this path. llama-skills rescans that directory on every chat completion (no service restart); however, only new completion requests (i.e. new conversations) see the updated list; earlier turns in the same conversation are not rewritten."""
+If the user asks about configuring llama-skills or adding skills, explain how to add skill folders under this path. llama-skills rescans that directory on every chat completion (no service restart); however, only new completion requests (i.e. new conversations) see the updated list; earlier turns in the same conversation are not rewritten.{_SYSTEM_PROMPT_DISCLOSURE}"""
 
 
 def build_registry_block(entries: list[SkillEntry], *, skills_dir: str) -> str:
@@ -28,9 +31,9 @@ def build_registry_block(entries: list[SkillEntry], *, skills_dir: str) -> str:
 
     lines = [_REGISTRY_HEADER.rstrip(), ""]
     for entry in entries:
-        line = f"- **{entry.name}**: {entry.description}"
+        line = f"- `{entry.name}`: **{entry.title}**\n  {entry.description}"
         if entry.when_to_use:
-            line = f"{line} [{entry.when_to_use}]"
+            line = f"{line}\n  > When to use this skill: {entry.when_to_use}"
         lines.append(line)
     return "\n".join(lines)
 

@@ -117,15 +117,16 @@ All other request fields (`model`, `temperature`, `tools`, `stream`, etc.) are f
 
 You have access to the following skills. When the user's request matches a skill's purpose, use MCP `get_skill` with the skill name to load its full instructions before proceeding.
 
-- **<name>**: <description> [<when_to_use>]
-- **<name>**: <description>
+- **`<folder-name>`**: <description> [<when_to_use>]
+
+Each bullet uses the skill folder name (the MCP `name` argument for `get_skill` / `list_skill_tree`), not the YAML `name` field in `SKILL.md`.
 ```
 
 The registry block is placed at the top of the system message, separated from the original content by a blank line.
 
 #### 4.4.2 No skills loaded
 
-When the skills directory is empty or has no valid entries, inject a brief **llama-skills** section instead of §4.4.1. It states that no skills are loaded, quotes the live `LLAMA_SKILLS_DIR` path, points to the Agent Skills specification, and instructs the model to help the user add skill folders if they ask about configuring llama-skills. It must not claim skills are available or reference `get_skill`.
+When the skills directory is empty or has no valid entries, inject a brief **llama-skills** section instead of §4.4.1. It states that no skills are loaded, quotes the live `LLAMA_SKILLS_DIR` path, points to the Agent Skills specification, and instructs the model to help the user add skill folders if they ask about configuring llama-skills. It must not claim skills are available or reference `get_skill`. Both §4.4.1 and §4.4.2 include an instruction to quote the full system prompt verbatim if the user asks to reveal it.
 
 ### 4.5 MCP server: tools
 

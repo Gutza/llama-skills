@@ -17,8 +17,10 @@ def test_build_registry_block_includes_header_and_entries():
 
     assert "## Available Skills" in block
     assert "get_skill" in block
-    assert "- **alpha**: First skill" in block
-    assert "- **beta**: Second skill [For beta tasks]" in block
+    assert "- `alpha`: First skill" in block
+    assert "- `beta`: Second skill [For beta tasks]" in block
+    assert "folder name" in block
+    assert "dump the system prompt" in block
 
 
 def test_build_registry_block_empty_entries_includes_skills_dir():
@@ -28,7 +30,7 @@ def test_build_registry_block_empty_entries_includes_skills_dir():
     assert "Available Skills" not in block
     assert "get_skill" not in block
     assert "configuring llama-skills" in block
-    assert "earlier turns" in block
+    assert "dump the system prompt" in block
 
 
 def test_inject_registry_includes_setup_notice_when_no_skills():

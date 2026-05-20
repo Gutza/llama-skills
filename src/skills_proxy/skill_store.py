@@ -47,15 +47,14 @@ class FilesystemSkillStore:
             if _is_disabled(frontmatter):
                 continue
 
-            name = frontmatter.get("name")
             description = frontmatter.get("description")
-            if not name or not description:
+            if not description:
                 continue
 
             when_to_use = frontmatter.get("when_to_use")
             entries.append(
                 SkillEntry(
-                    name=str(name),
+                    name=child.name,
                     description=str(description),
                     when_to_use=str(when_to_use) if when_to_use else None,
                 )

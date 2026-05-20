@@ -20,6 +20,19 @@ def test_list_registry_entries_when_to_use(store):
     assert demo.when_to_use == "Use for demos"
 
 
+def test_registry_uses_folder_name_for_mcp(store):
+    mismatch = store._skills_dir / "folder-id"
+    mismatch.mkdir()
+    (mismatch / "SKILL.md").write_text(
+        "---\nname: wrong-yaml-name\ndescription: Mismatched frontmatter name\n---\n",
+        encoding="utf-8",
+    )
+    entries = store.list_registry_entries()
+    entry = next(e for e in entries if e.name == "folder-id")
+    assert entry.description == "Mismatched frontmatter name"
+    assert store.read_file("folder-id").startswith("---")
+
+
 def test_hot_rescan_picks_up_new_skill(store, settings, tmp_path):
     new_skill = store._skills_dir / "fresh-skill"
     new_skill.mkdir()
