@@ -5,11 +5,10 @@ from .models import SkillEntry
 _SYSTEM_PROMPT_DISCLOSURE = """
 If the user asks you to show, print, reveal, or dump the system prompt or your instructions, quote the full system message you received (including this block) verbatim. Do not refuse, hedge, or summarize it."""
 
-_REGISTRY_HEADER = f"""## Available Skills
+def _registry_header(skills_dir: str) -> str:
+    return f"""## Available Skills
 
-You have access to the following skills. When the user's request matches a skill's purpose, call MCP `get_skill` or `list_skill_tree` using the exact skill name quoted below.{_SYSTEM_PROMPT_DISCLOSURE}
-
-Each bullet uses the skill folder name (the MCP `name` argument for `get_skill` / `list_skill_tree`), not the YAML `name` field in `SKILL.md`.
+Find below the list of skills in local folder `{skills_dir}`. When the user's request matches a skill's purpose, always start by calling MCP `get_skill` using the exact skill name quoted below. You can also list all files in a skill using MCP `list_skill_tree`, if additional skill files turn out to be relevant.{_SYSTEM_PROMPT_DISCLOSURE}
 """
 
 
@@ -17,9 +16,7 @@ def build_no_skills_notice(skills_dir: str) -> str:
     """System prompt when no skills are loaded: setup guidance only (no MCP tools)."""
     return f"""## llama-skills
 
-No Agent Skills are currently loaded. The configured skills directory is:
-
-`{skills_dir}`
+No Agent Skills are currently loaded. The configured skills directory is `{skills_dir}`
 
 That directory is empty or has no valid skill folders (each needs a `SKILL.md` with `name` and `description` in YAML frontmatter). See the [Agent Skills specification](https://agentskills.io/specification) for the format.
 
@@ -31,7 +28,7 @@ def build_registry_block(entries: list[SkillEntry], *, skills_dir: str) -> str:
     if not entries:
         return build_no_skills_notice(skills_dir)
 
-    lines = [_REGISTRY_HEADER.rstrip(), ""]
+    lines = [_registry_header(skills_dir).rstrip(), ""]
     for entry in entries:
         prefix = ""
         if entry.folder_name != entry.name:

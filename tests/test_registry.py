@@ -20,7 +20,7 @@ def test_build_registry_block_includes_header_and_entries():
     assert "get_skill" in block
     assert "- `alpha`: First skill" in block
     assert "- `beta`: **Beta skill** – Second skill [For beta tasks]" in block
-    assert "folder name" in block
+    assert "local folder `/skills`" in block
     assert "dump the system prompt" in block
 
 

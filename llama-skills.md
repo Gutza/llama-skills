@@ -115,11 +115,9 @@ All other request fields (`model`, `temperature`, `tools`, `stream`, etc.) are f
 ```
 ## Available Skills
 
-You have access to the following skills. When the user's request matches a skill's purpose, use MCP `get_skill` with the skill name to load its full instructions before proceeding.
+Find below the list of skills in local folder `<skills_dir>`. When the user's request matches a skill's purpose, always start by calling MCP `get_skill` using the exact skill name quoted below. You can also list all files in a skill using MCP `list_skill_tree`, if additional skill files turn out to be relevant.
 
 - **`<folder-name>`**: <description> [<when_to_use>]
-
-Each bullet uses the skill folder name (the MCP `name` argument for `get_skill` / `list_skill_tree`), not the YAML `name` field in `SKILL.md`.
 ```
 
 The registry block is placed at the top of the system message, separated from the original content by a blank line.
