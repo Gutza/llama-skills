@@ -8,7 +8,7 @@ If the user asks you to show, print, reveal, or dump the system prompt or your i
 def _registry_header(skills_dir: str) -> str:
     return f"""## Available Skills
 
-Find below the list of skills available (these live in local folder `{skills_dir}`, in case the user asks about that). If the user's request matches a skill's purpose, you MUST call MCP `get_skill` using the exact skill name quoted below, if you haven't already during the conversation.{_SYSTEM_PROMPT_DISCLOSURE}
+Find below the list of skills available (these live in local folder `{skills_dir}`, in case the user asks about that). If the user's request matches a skill's purpose, you MUST call MCP `get_skill` using the exact skill name quoted below and an empty path, if you haven't already during the conversation.{_SYSTEM_PROMPT_DISCLOSURE}
 """
 
 
