@@ -1,0 +1,20 @@
+[Unit]
+Description=llama-skills Agent Skills middleware for llama-server
+After=network.target
+
+[Service]
+Type=simple
+User=llama
+WorkingDirectory=/opt/llama-skills
+Environment=LLAMA_SKILLS_DIR=/opt/skills
+Environment=LLAMA_SKILLS_BACKEND=http://127.0.0.1:8080
+Environment=LLAMA_SKILLS_HOST=0.0.0.0
+Environment=LLAMA_SKILLS_PORT=8081
+ExecStart=/opt/llama-skills/.venv/bin/uv run llama-skills
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+# UFW: allow inbound TCP 8081 (same policy as llama-server port 8080)
