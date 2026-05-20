@@ -8,6 +8,60 @@ from unittest.mock import patch
 import httpx
 
 
+def test_chat_completions_injects_mcp_url_from_host_header(proxy_client):
+    captured: dict = {}
+
+    async def mock_request(self, method, url, **kwargs):
+        captured["body"] = json.loads(kwargs.get("content") or b"{}")
+
+        class MockResponse:
+            status_code = 200
+            content = b"{}"
+            headers = {"content-type": "application/json"}
+
+        return MockResponse()
+
+    with patch.object(httpx.AsyncClient, "request", mock_request):
+        response = proxy_client.post(
+            "/v1/chat/completions",
+            json={"messages": [{"role": "user", "content": "Hi"}]},
+            headers={"Host": "foo-server:8081"},
+        )
+
+    assert response.status_code == 200
+    system = next(m for m in captured["body"]["messages"] if m["role"] == "system")
+    assert "http://foo-server:8081/mcp/" in system["content"]
+    assert "## MCP setup (llama-server WebUI)" in system["content"]
+
+
+def test_chat_completions_injects_https_mcp_url_with_forwarded_proto(proxy_client):
+    captured: dict = {}
+
+    async def mock_request(self, method, url, **kwargs):
+        captured["body"] = json.loads(kwargs.get("content") or b"{}")
+
+        class MockResponse:
+            status_code = 200
+            content = b"{}"
+            headers = {"content-type": "application/json"}
+
+        return MockResponse()
+
+    with patch.object(httpx.AsyncClient, "request", mock_request):
+        response = proxy_client.post(
+            "/v1/chat/completions",
+            json={"messages": [{"role": "user", "content": "Hi"}]},
+            headers={
+                "Host": "foo-server:8081",
+                "X-Forwarded-Proto": "https",
+            },
+        )
+
+    assert response.status_code == 200
+    system = next(m for m in captured["body"]["messages"] if m["role"] == "system")
+    assert "https://foo-server:8081/mcp/" in system["content"]
+
+
 def test_chat_completions_injects_registry(proxy_client):
     captured: dict = {}
 
@@ -88,10 +142,10 @@ def test_cors_proxy_adds_scheme_to_url_query(proxy_client):
     with patch.object(httpx.AsyncClient, "request", mock_request):
         proxy_client.get(
             "/cors-proxy",
-            params={"url": "lloom.pn:8081/mcp/"},
+            params={"url": "foo-server:8081/mcp/"},
         )
 
-    assert captured["url"] == "/cors-proxy?url=http%3A%2F%2Flloom.pn%3A8081%2Fmcp%2F"
+    assert captured["url"] == "/cors-proxy?url=http%3A%2F%2Ffoo-server%3A8081%2Fmcp%2F"
 
 
 def test_passthrough_returns_502_when_backend_unreachable(skills_dir):

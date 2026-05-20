@@ -10,6 +10,7 @@ import httpx
 from starlette.requests import Request
 from starlette.responses import Response, StreamingResponse
 
+from .config import Settings
 from .registry import build_registry_block, inject_registry
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ _HOP_BY_HOP = {
 }
 
 # Let httpx set Host/Content-Length from base_url and body. Forwarding the
-# client's Host (e.g. lloom:8081) makes llama-server build scheme-less URLs.
+# client's Host (e.g. foo-server:8081) makes llama-server build scheme-less URLs.
 _SKIP_REQUEST_HEADERS = _HOP_BY_HOP | {
     "host",
     "content-length",
@@ -48,7 +49,13 @@ async def chat_completions(request: Request) -> Response:
     settings = request.app.state.settings
     store = request.app.state.skill_store
     entries = store.list_registry_entries()
-    registry = build_registry_block(entries, skills_dir=settings.skills_dir)
+    base_url = resolve_public_base_url(request, settings)
+    mcp_url = f"{base_url}/mcp/" if base_url else None
+    registry = build_registry_block(
+        entries,
+        skills_dir=settings.skills_dir,
+        mcp_server_url=mcp_url,
+    )
     payload["messages"] = inject_registry(messages, registry)
     modified_body = json.dumps(payload).encode("utf-8")
 
@@ -112,6 +119,19 @@ def _is_cors_proxy_availability_probe(request: Request) -> bool:
 def _client_proto(request: Request, backend_url: str) -> str:
     parsed = urlparse(backend_url)
     return request.headers.get("x-forwarded-proto") or parsed.scheme or "http"
+
+
+def resolve_public_base_url(request: Request, settings: Settings) -> str | None:
+    """Derive the client-facing llama-skills base URL for MCP setup instructions."""
+    if settings.public_url:
+        return settings.public_url
+
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host")
+    if not host:
+        return None
+
+    proto = _client_proto(request, settings.backend)
+    return f"{proto}://{host}"
 
 
 def _ensure_absolute_url(target: str, request: Request, backend_url: str) -> str:

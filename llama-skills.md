@@ -105,7 +105,7 @@ On every `POST /v1/chat/completions` request:
 
 1. Scan `LLAMA_SKILLS_DIR`, parse frontmatter from each `*/SKILL.md`. Skills missing a `name` or `description`, or with `disable-model-invocation: true`, are silently skipped.
 2. If no skills remain after filtering, inject a short setup notice (see §4.4.2) that includes the configured `LLAMA_SKILLS_DIR` path. It does not mention MCP tools.
-3. Otherwise build a skills registry block (see §4.4.1) and prepend it to the existing system message, or insert one if the request has no system message.
+3. Otherwise build a skills registry block (see §4.4.1) and prepend it to the existing system message, or insert one if the request has no system message. When skills are loaded, the registry includes an MCP setup section (see §4.4.3) with the client-facing proxy URL and the exact `/mcp/` endpoint derived from the request (or `LLAMA_SKILLS_PUBLIC_URL` when set).
 4. Forward the (possibly modified) request to llama-server. Stream the response back to the client unchanged.
 
 All other request fields (`model`, `temperature`, `tools`, `stream`, etc.) are forwarded unmodified.
@@ -125,6 +125,18 @@ The registry block is placed at the top of the system message, separated from th
 #### 4.4.2 No skills loaded
 
 When the skills directory is empty or has no valid entries, inject a brief **llama-skills** section instead of §4.4.1. It states that no skills are loaded, quotes the live `LLAMA_SKILLS_DIR` path, points to the Agent Skills specification, and instructs the model to help the user add skill folders if they ask about configuring llama-skills. It must not claim skills are available or reference `get_skill`. Both §4.4.1 and §4.4.2 include an instruction to quote the full system prompt verbatim if the user asks to reveal it.
+
+#### 4.4.3 MCP setup (when skills are loaded)
+
+When at least one skill is registered and a public base URL can be resolved, append an **MCP setup (llama-server WebUI)** section after the skill list. It instructs the model to check whether `get_skill` and `list_skill_tree` are available; if not, tell the user to open the llama-server web interface, go to **Manage Servers**, and add the exact MCP URL (for example `http://llm-host.local:8081/mcp/`). The section also states the proxy base URL so the model does not direct users to llama-server on port 8080.
+
+URL resolution per request (unless overridden):
+
+1. `LLAMA_SKILLS_PUBLIC_URL` environment variable, if set
+2. `X-Forwarded-Host` request header
+3. `Host` request header
+
+Scheme: `X-Forwarded-Proto`, else the backend URL scheme, else `http`. If no host is available, the MCP setup section is omitted.
 
 ### 4.5 MCP server: tools
 
@@ -177,6 +189,7 @@ All configuration via environment variables, set in the systemd service unit:
 | `LLAMA_SKILLS_BACKEND` | `http://localhost:8080` | llama-server URL |
 | `LLAMA_SKILLS_PORT` | `8081` | Port to listen on |
 | `LLAMA_SKILLS_HOST` | `0.0.0.0` | Bind address |
+| `LLAMA_SKILLS_PUBLIC_URL` | n/a | Optional fixed public base URL (no trailing slash) for MCP setup text when request headers are missing or behind another reverse proxy |
 
 ### 4.7 Systemd service
 

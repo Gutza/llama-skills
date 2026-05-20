@@ -33,6 +33,7 @@ git pull && uv sync && sudo systemctl restart llama-skills && systemctl status l
    $env:LLAMA_SKILLS_DIR = "/path/to/local/skills/folder/"
    $env:LLAMA_SKILLS_BACKEND = "http://localhost:8080"   # optional
    $env:LLAMA_SKILLS_PORT = "8081"                       # optional
+   $env:LLAMA_SKILLS_PUBLIC_URL = "http://llm-host.local:8081"  # optional; reverse-proxy / fixed URL
    ```
 
 4. Start the service:
@@ -83,6 +84,8 @@ After llama-skills is running:
 - **llama-server WebUI (skill activation):** add `http://llm-host.local:8081/mcp/` under *Manage Servers*.
 - **Direct API clients:** replace `:8080` with `:8081` in request URLs. No other changes are required.
 
+If llama-skills sits behind another reverse proxy, set `LLAMA_SKILLS_PUBLIC_URL` to the URL clients use (for example `https://llm.example.com`). The proxy injects that base URL and the matching `/mcp/` endpoint into chat completions so the model can guide users through **Manage Servers** when MCP tools are missing.
+
 ## Verification
 
 llama-skills forwards almost all HTTP traffic to llama-server. The proxy does **not** forward the client `Host` header (that breaks llama-server URL construction with `invalid URL: no scheme`); it sets `X-Forwarded-Proto` and `X-Forwarded-Host` instead.
@@ -95,7 +98,7 @@ Run these checks after deployment:
 
 1. **Passthrough:** `GET http://<host>:8081/v1/models` should return the same response as llama-server on port 8080. Confirm llama-server is up first (`curl http://127.0.0.1:8080/v1/models` on the host).
 
-2. **Registry injection:** send a `POST /v1/chat/completions` request and confirm the forwarded body includes a system message with `## Available Skills` at the top (inspect llama-server logs or a temporary backend proxy).
+2. **Registry injection:** send a `POST /v1/chat/completions` request with a `Host` header matching your client URL and confirm the forwarded body includes `## Available Skills` and `## MCP setup (llama-server WebUI)` with your `http://<host>:8081/mcp/` URL (inspect llama-server logs or a temporary backend proxy).
 
 3. **MCP tools:** call `get_skill` and `list_skill_tree` against `http://<host>:8081/mcp/` using the llama-server WebUI MCP client or an MCP-capable HTTP client. A successful `get_skill` returns the UTF-8 text of `SKILL.md`.
 

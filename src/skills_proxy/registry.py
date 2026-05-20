@@ -24,7 +24,20 @@ If the user asks about configuring llama-skills or adding skills, explain how to
 {_SYSTEM_PROMPT_DISCLOSURE}"""
 
 
-def build_registry_block(entries: list[SkillEntry], *, skills_dir: str) -> str:
+def _mcp_setup_block(*, proxy_base_url: str, mcp_server_url: str) -> str:
+    return f"""## MCP setup (llama-server WebUI)
+
+Skills activation requires MCP tools `get_skill` and `list_skill_tree`. If these tools are not in your available tool list, the llama-skills MCP server is not registered yet – tell the user to open the llama-server web interface, go to **MCP Servers**, and add `{mcp_server_url}`.
+
+The user is accessing llama-skills at `{proxy_base_url}`."""
+
+
+def build_registry_block(
+    entries: list[SkillEntry],
+    *,
+    skills_dir: str,
+    mcp_server_url: str | None = None,
+) -> str:
     """Build the skills registry block for injection into the system prompt."""
     if not entries:
         return build_no_skills_notice(skills_dir)
@@ -38,6 +51,18 @@ def build_registry_block(entries: list[SkillEntry], *, skills_dir: str) -> str:
         if entry.when_to_use:
             line = f"{line} [{entry.when_to_use}]"
         lines.append(line)
+
+    if mcp_server_url:
+        proxy_base = mcp_server_url.rstrip("/").removesuffix("/mcp")
+        lines.extend(
+            [
+                "",
+                _mcp_setup_block(
+                    proxy_base_url=proxy_base,
+                    mcp_server_url=mcp_server_url,
+                ),
+            ]
+        )
 
     lines.append(_SYSTEM_PROMPT_DISCLOSURE)
 
