@@ -19,7 +19,9 @@ class SkillStore(Protocol):
 
     def list_registry_entries(self) -> list[SkillEntry]: ...
 
-    def read_file(self, name: str, path: str | None = None) -> str: ...
+    def read_file(
+        self, name: str, path: str | None = None, trim_frontmatter: bool = False
+    ) -> str: ...
 
     def list_tree(self, name: str) -> str: ...
 
@@ -45,7 +47,7 @@ class FilesystemSkillStore:
             if frontmatter is None:
                 continue
             name = frontmatter.get("name")
-            if not name: # names are mandatory per the [Agent Skills specification](https://agentskills.io/specification)
+            if not name:  # names are mandatory per the [Agent Skills specification](https://agentskills.io/specification)
                 continue
             if _is_disabled(frontmatter):
                 continue
@@ -65,11 +67,16 @@ class FilesystemSkillStore:
             )
         return entries
 
-    def read_file(self, name: str, path: str = "SKILL.md") -> str:
+    def read_file(
+        self, name: str, path: str = "SKILL.md", trim_frontmatter: bool = False
+    ) -> str:
         target = self._resolve_path(name, path)
         if not target.is_file():
             raise SkillFileNotFound(path)
-        return target.read_text(encoding="utf-8")
+        content = target.read_text(encoding="utf-8")
+        if trim_frontmatter:
+            return _strip_frontmatter(content)
+        return content
 
     def list_tree(self, name: str) -> str:
         skill_root = self._resolve_path(name, ".")
@@ -99,6 +106,13 @@ class FilesystemSkillStore:
         if not target.exists():
             raise SkillFileNotFound(rel_path)
         return target
+
+
+def _strip_frontmatter(text: str) -> str:
+    match = _FRONTMATTER_RE.match(text)
+    if not match:
+        return text
+    return text[match.end() :].lstrip("\n")
 
 
 def _parse_frontmatter(text: str) -> dict | None:

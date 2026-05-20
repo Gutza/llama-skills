@@ -71,7 +71,9 @@ class FakeSkillStore:
     def list_registry_entries(self) -> list[SkillEntry]:
         return list(self.entries)
 
-    def read_file(self, name: str, path: str = "SKILL.md") -> str:
+    def read_file(
+        self, name: str, path: str = "SKILL.md", trim_frontmatter: bool = False
+    ) -> str:
         key = (name, path)
         if key not in self.files:
             raise SkillFileNotFound(path)

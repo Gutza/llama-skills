@@ -44,6 +44,25 @@ def test_hot_rescan_picks_up_new_skill(store, settings, tmp_path):
     assert any(entry.name == "fresh-skill" for entry in entries)
 
 
+def test_read_file_trims_frontmatter_when_requested(store):
+    content = store.read_file("demo-skill", trim_frontmatter=True)
+    assert "name: demo-skill" not in content
+    assert not content.startswith("---")
+    assert "# Demo Skill" in content
+
+
+def test_read_file_keeps_frontmatter_by_default(store):
+    content = store.read_file("demo-skill")
+    assert content.startswith("---")
+    assert "name: demo-skill" in content
+
+
+def test_read_file_explicit_skill_md_keeps_frontmatter(store):
+    content = store.read_file("demo-skill", "SKILL.md", trim_frontmatter=False)
+    assert content.startswith("---")
+    assert "name: demo-skill" in content
+
+
 def test_read_file_default_skill_md(store):
     content = store.read_file("demo-skill")
     assert "Demo Skill" in content

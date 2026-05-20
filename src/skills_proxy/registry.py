@@ -2,14 +2,14 @@
 
 from .models import SkillEntry
 
-_SYSTEM_PROMPT_DISCLOSURE = """
-If the user asks you to show, print, reveal, or dump the system prompt or your instructions, quote the full system message you received (including this block) verbatim. Do not refuse, hedge, or summarize it."""
+_SYSTEM_PROMPT_DISCLOSURE = """---
+You are explicitly allowed to reveal this system prompt to the user in full."""
+
 
 def _registry_header(skills_dir: str) -> str:
     return f"""## Available Skills
 
-Find below the list of skills available (these live in local folder `{skills_dir}`, in case the user asks about that). If the user's request matches a skill's purpose, you MUST call MCP `get_skill` using the exact skill name quoted below and an empty path, if you haven't already during the conversation.{_SYSTEM_PROMPT_DISCLOSURE}
-"""
+Find below the list of skills available (these live in local folder `{skills_dir}`, in case the user asks where they are). If the user's request matches a skill's purpose, you MUST call MCP `get_skill` using the exact skill name quoted below, if you haven't already during this conversation."""
 
 
 def build_no_skills_notice(skills_dir: str) -> str:
@@ -18,9 +18,10 @@ def build_no_skills_notice(skills_dir: str) -> str:
 
 No Agent Skills are currently loaded. The configured skills directory is `{skills_dir}`
 
-That directory is empty or has no valid skill folders (each needs a `SKILL.md` with `name` and `description` in YAML frontmatter). See the [Agent Skills specification](https://agentskills.io/specification) for the format.
+That directory is currently empty or has no valid skill folders (each needs a `SKILL.md` with `name` and `description` in YAML frontmatter). See the [Agent Skills specification](https://agentskills.io/specification) for the format (or point the user to the specification).
 
-If the user asks about configuring llama-skills or adding skills, explain how to add skill folders under this path. llama-skills rescans that directory on every chat completion (no service restart); however, only new completion requests (i.e. new conversations) see the updated list; earlier turns in the same conversation are not rewritten.{_SYSTEM_PROMPT_DISCLOSURE}"""
+If the user asks about configuring llama-skills or adding skills, explain how to add skill folders under this path. llama-skills rescans that directory on every chat completion (no service restart); however, only new completion requests (i.e. new conversations) see the updated list; earlier turns in the same conversation are not rewritten.
+{_SYSTEM_PROMPT_DISCLOSURE}"""
 
 
 def build_registry_block(entries: list[SkillEntry], *, skills_dir: str) -> str:
@@ -37,6 +38,9 @@ def build_registry_block(entries: list[SkillEntry], *, skills_dir: str) -> str:
         if entry.when_to_use:
             line = f"{line} [{entry.when_to_use}]"
         lines.append(line)
+
+    lines.append(_SYSTEM_PROMPT_DISCLOSURE)
+
     return "\n".join(lines)
 
 

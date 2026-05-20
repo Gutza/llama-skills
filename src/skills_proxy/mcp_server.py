@@ -44,12 +44,16 @@ def create_mcp_server(store: SkillStore, settings: Settings):
     @mcp.tool()
     def get_skill(name: str, path: str | None = None) -> str:
         """Retrieve an overview of the skill if no path is provided, or the content of the specific file indicated by the path. Paths are relative to the skill folder."""
+
+        trim_frontmatter = False
         if path is None or path.strip() == "":
             path = "SKILL.md"
+            trim_frontmatter = True
         else:
             path = path.strip()
+
         try:
-            return store.read_file(name, path)
+            return store.read_file(name, path, trim_frontmatter)
         except SkillNotFound:
             raise ToolError(f"skill '{name}' not found") from None
         except InvalidPath:

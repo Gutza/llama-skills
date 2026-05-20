@@ -27,7 +27,51 @@ def test_get_skill_returns_content(client):
     )
     assert response.status_code == 200
     payload = _parse_json_response(response)
-    assert "Demo Skill" in _tool_text(payload)
+    text = _tool_text(payload)
+    assert "Demo Skill" in text
+    assert "name: demo-skill" not in text
+    assert not text.startswith("---")
+
+
+def test_get_skill_overview_omits_frontmatter(client):
+    response = client.post(
+        _MCP_URL,
+        headers=_MCP_HEADERS,
+        json={
+            "jsonrpc": "2.0",
+            "id": 5,
+            "method": "tools/call",
+            "params": {
+                "name": "get_skill",
+                "arguments": {"name": "demo-skill", "path": ""},
+            },
+        },
+    )
+    payload = _parse_json_response(response)
+    text = _tool_text(payload)
+    assert "# Demo Skill" in text
+    assert "name: demo-skill" not in text
+    assert not text.startswith("---")
+
+
+def test_get_skill_explicit_skill_md_includes_frontmatter(client):
+    response = client.post(
+        _MCP_URL,
+        headers=_MCP_HEADERS,
+        json={
+            "jsonrpc": "2.0",
+            "id": 6,
+            "method": "tools/call",
+            "params": {
+                "name": "get_skill",
+                "arguments": {"name": "demo-skill", "path": "SKILL.md"},
+            },
+        },
+    )
+    payload = _parse_json_response(response)
+    text = _tool_text(payload)
+    assert text.startswith("---")
+    assert "name: demo-skill" in text
 
 
 def test_get_skill_not_found(client):
